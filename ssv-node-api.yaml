@@ -1,0 +1,193 @@
+openapi: 3.0.0
+info:
+  title: SSV Node API
+  version: 1.0.0
+servers:
+  - url: '{server_url}/v1'
+    variables:
+      server_url:
+        default: 'http://localhost:16000'
+tags:
+  - name: Node
+    description: Information about the node's identity and peers
+  - name: SSV
+    description: Information about the SSV network
+paths:
+  /node/identity:
+    get:
+      summary: Get the node's identity
+      tags:
+        - Node
+      responses:
+        '200':
+          description: The identity of the node
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Identity'
+        default:
+          description: An error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /node/peers:
+    get:
+      summary: List the node's peers
+      tags:
+        - Node
+      responses:
+        '200':
+          description: A list of peers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Peer'
+        default:
+          description: An error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /validators:
+    get:
+      summary: List the registered SSV validators
+      tags:
+        - SSV
+      parameters:
+        - in: query
+          name: owners
+          schema:
+            type: string
+          description: |
+            Filter validators by comma-separated owner addresses. For example:<br/>
+            - `owners=0xABC123,0xDEF456,0xGHI789` for validators owned by any of the given addresses.
+        - in: query
+          name: operators
+          schema:
+            type: string
+          description: |
+            Filter validators belonging to any of these comma-separated operator IDs. For example:<br/>
+            - `operators=12,34,56` for validators that are operated by either of these operator IDs.
+        - in: query
+          name: clusters
+          schema:
+            type: string
+          description: |
+            Filter validators by clusters (comma-separated operator IDs), for example:<br/>
+            - `clusters=1,2,3,4` for validators associated with a specific cluster
+            - `clusters=1,2,3,4+5,6,7,8` for validators associated with any cluster in a list
+        - in: query
+          name: subclusters
+          schema:
+            type: string
+          description: |
+            Filter validators with clusters containing the given comma-separated operator IDs. For example:<br/>
+            - `subclusters=2,3` for validators associated with clusters `1,2,3,4` or `5,2,3,6`
+            - `subclusters=2,3+5,6,7` for validators associated with clusters `1,2,3,4`, `5,2,3,6` or `5,6,7,8`
+        - in: query
+          name: pubkeys
+          schema:
+            type: string
+          description: |
+            Filter validators by comma-separated public keys.
+        - in: query
+          name: indices
+          schema:
+            type: string
+          description: |
+            Filter validators by comma-separated indices. For example:<br/>
+            - `indices=5` for validator with index 5.
+            - `indices=1,5,9` for validators that have any of the specified indices.
+      responses:
+        '200':
+          description: A list of validators
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Validator'
+        default:
+          description: An error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  schemas:
+    Identity:
+      type: object
+      properties:
+        peer_id:
+          type: string
+        addresses:
+          type: array
+          items:
+            type: string
+        subnets:
+          type: string
+        version:
+          type: string
+    Peer:
+      type: object
+      properties:
+        id:
+          type: string
+        addresses:
+          type: array
+          items:
+            type: string
+        connections:
+          type: array
+          items:
+            $ref: '#/components/schemas/Connection'
+        connectedness:
+          type: string
+        subnets:
+          type: string
+        version:
+          type: string
+    Connection:
+      type: object
+      properties:
+        address:
+          type: string
+        direction:
+          type: string
+    Validator:
+      type: object
+      properties:
+        public_key:
+          type: string
+        index:
+          type: integer
+          format: int64
+        status:
+          type: string
+        activation_epoch:
+          type: string
+        owner:
+          type: string
+        committee:
+          type: array
+          items:
+            type: integer
+            format: int64
+        quorum:
+          type: integer
+          format: int64
+        partial_quorum:
+          type: integer
+          format: int64
+        graffiti:
+          type: string
+        liquidated:
+          type: boolean
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
