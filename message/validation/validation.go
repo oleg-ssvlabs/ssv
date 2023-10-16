@@ -25,6 +25,7 @@ import (
 
 	"github.com/bloxapp/ssv/logging/fields"
 	"github.com/bloxapp/ssv/network/commons"
+	"github.com/bloxapp/ssv/network/peers"
 	"github.com/bloxapp/ssv/networkconfig"
 	"github.com/bloxapp/ssv/operator/duties/dutystore"
 	ssvmessage "github.com/bloxapp/ssv/protocol/v2/message"
@@ -100,6 +101,7 @@ type messageValidator struct {
 	netCfg           networkconfig.NetworkConfig
 	index            sync.Map
 	shareStorage     registrystorage.Shares
+	peersIndex       peers.PeerInfoIndex
 	dutyStore        *dutystore.Store
 	ownOperatorID    spectypes.OperatorID
 	verifySignatures bool
@@ -155,6 +157,13 @@ func WithOwnOperatorID(id spectypes.OperatorID) Option {
 func WithShareStorage(shareStorage registrystorage.Shares) Option {
 	return func(mv *messageValidator) {
 		mv.shareStorage = shareStorage
+	}
+}
+
+// WithPeerInfoIndex sets the peer info index for the messageValidator.
+func WithPeerInfoIndex(index peers.PeerInfoIndex) Option {
+	return func(mv *messageValidator) {
+		mv.peersIndex = index
 	}
 }
 
@@ -243,7 +252,7 @@ func (mv *messageValidator) ValidatorForTopic(_ string) func(ctx context.Context
 
 // ValidatePubsubMessage validates the given pubsub message.
 // Depending on the outcome, it will return one of the pubsub validation results (Accept, Ignore, or Reject).
-func (mv *messageValidator) ValidatePubsubMessage(_ context.Context, _ peer.ID, pmsg *pubsub.Message) pubsub.ValidationResult {
+func (mv *messageValidator) ValidatePubsubMessage(_ context.Context, peerID peer.ID, pmsg *pubsub.Message) pubsub.ValidationResult {
 	start := time.Now()
 	var validationDurationLabels []string // TODO: implement
 
@@ -251,6 +260,15 @@ func (mv *messageValidator) ValidatePubsubMessage(_ context.Context, _ peer.ID, 
 		sinceStart := time.Since(start)
 		mv.metrics.MessageValidationDuration(sinceStart, validationDurationLabels...)
 	}()
+
+	// Ignore messages from peers that are not connected.
+	// TODO:
+	// - pass the existing PeerInfoIndex to NewMessageValidator
+	// - add a separate metric to track # of messages ignored here
+	// - add unit tests with a PeerInfoIndex mock
+	if mv.peersIndex != nil && mv.peersIndex.State(peerID) != peers.StateConnected {
+		return pubsub.ValidationIgnore
+	}
 
 	decodedMessage, descriptor, err := mv.validateP2PMessage(pmsg, time.Now())
 	round := specqbft.Round(0)
