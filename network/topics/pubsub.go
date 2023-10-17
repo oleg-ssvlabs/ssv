@@ -118,7 +118,7 @@ func NewPubSub(ctx context.Context, logger *zap.Logger, cfg *PubSubConfig) (*pub
 
 	const signaturePolicy = pubsub.StrictSign
 
-	logger.Debug("signature policy", zap.Uint8("code", uint8(signaturePolicy)))
+	logger.Info("signature policy", zap.Uint8("code", uint8(signaturePolicy)))
 
 	psOpts := []pubsub.Option{
 		pubsub.WithSeenMessagesTTL(cfg.MsgIDCacheTTL),
