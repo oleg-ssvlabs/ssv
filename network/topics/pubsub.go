@@ -116,7 +116,7 @@ func NewPubSub(ctx context.Context, logger *zap.Logger, cfg *PubSubConfig) (*pub
 		sf.(Whitelist).Register(topic)
 	}
 
-	const signaturePolicy = pubsub.StrictSign
+	const signaturePolicy = pubsub.StrictNoSign
 
 	logger.Info("signature policy", zap.Uint8("code", uint8(signaturePolicy)))
 
