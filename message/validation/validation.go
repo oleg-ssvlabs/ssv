@@ -229,9 +229,9 @@ func (mv *messageValidator) ValidatePubsubMessage(_ context.Context, peerID peer
 		return pubsub.ValidationAccept
 	}
 
-	mv.logger.Info("################### VALIDATIONX RECIEVED FROM :", fields.PeerID(pmsg.ReceivedFrom))
-	mv.logger.Info("################### VALIDATIONXRECIEVED getfrom :", fields.PeerID(pmsg.GetFrom()))
-	mv.logger.Info("################### VALIDATIONX RECIEVED peerID :", fields.PeerID(peerID))
+	mv.logger.Info("################### VALIDATIONX RECIEVED FROM :", zap.String("messageID", pmsg.ID), fields.PeerID(pmsg.ReceivedFrom))
+	mv.logger.Info("################### VALIDATIONXRECIEVED getfrom :", zap.String("messageID", pmsg.ID), fields.PeerID(pmsg.GetFrom()))
+	mv.logger.Info("################### VALIDATIONX RECIEVED peerID :", zap.String("messageID", pmsg.ID), fields.PeerID(peerID))
 
 	start := time.Now()
 	var validationDurationLabels []string // TODO: implement
@@ -247,12 +247,14 @@ func (mv *messageValidator) ValidatePubsubMessage(_ context.Context, peerID peer
 		round = descriptor.Consensus.Round
 	}
 
+	f := append(descriptor.Fields(), fields.PeerID(peerID))
+
 	if err != nil {
 		var valErr Error
 		if errors.As(err, &valErr) {
 			if valErr.Reject() {
 				if !valErr.Silent() {
-					f := append(descriptor.Fields(), zap.Error(err))
+					f = append(f, zap.Error(err))
 					mv.logger.Debug("rejecting invalid message", f...)
 				}
 
@@ -261,7 +263,7 @@ func (mv *messageValidator) ValidatePubsubMessage(_ context.Context, peerID peer
 			}
 
 			if !valErr.Silent() {
-				f := append(descriptor.Fields(), zap.Error(err))
+				f = append(f, zap.Error(err))
 				mv.logger.Debug("ignoring invalid message", f...)
 			}
 			mv.metrics.MessageIgnored(valErr.Text(), descriptor.Role, round)
@@ -269,7 +271,7 @@ func (mv *messageValidator) ValidatePubsubMessage(_ context.Context, peerID peer
 		}
 
 		mv.metrics.MessageIgnored(err.Error(), descriptor.Role, round)
-		f := append(descriptor.Fields(), zap.Error(err))
+		f = append(f, zap.Error(err))
 		mv.logger.Debug("ignoring invalid message", f...)
 		return pubsub.ValidationIgnore
 	}
