@@ -229,6 +229,10 @@ func (mv *messageValidator) ValidatePubsubMessage(_ context.Context, peerID peer
 		return pubsub.ValidationAccept
 	}
 
+	mv.logger.Info("################### VALIDATIONX RECIEVED FROM :", fields.PeerID(pmsg.ReceivedFrom))
+	mv.logger.Info("################### VALIDATIONXRECIEVED getfrom :", fields.PeerID(pmsg.GetFrom()))
+	mv.logger.Info("################### VALIDATIONX RECIEVED peerID :", fields.PeerID(peerID))
+
 	start := time.Now()
 	var validationDurationLabels []string // TODO: implement
 
