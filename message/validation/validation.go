@@ -229,10 +229,6 @@ func (mv *messageValidator) ValidatePubsubMessage(_ context.Context, peerID peer
 		return pubsub.ValidationAccept
 	}
 
-	mv.logger.Info("################### VALIDATIONX RECIEVED FROM :", zap.String("messageID", hex.EncodeToString([]byte(pmsg.ID))), fields.PeerID(pmsg.ReceivedFrom))
-	mv.logger.Info("################### VALIDATIONXRECIEVED getfrom :", zap.String("messageID", hex.EncodeToString([]byte(pmsg.ID))), fields.PeerID(pmsg.GetFrom()))
-	mv.logger.Info("################### VALIDATIONX RECIEVED peerID :", zap.String("messageID", hex.EncodeToString([]byte(pmsg.ID))), fields.PeerID(peerID))
-
 	start := time.Now()
 	var validationDurationLabels []string // TODO: implement
 
