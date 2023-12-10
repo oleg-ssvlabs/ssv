@@ -77,6 +77,7 @@ type messageValidator struct {
 	dutyStore               *dutystore.Store
 	ownOperatorID           spectypes.OperatorID
 	operatorIDToPubkeyCache *hashmap.Map[spectypes.OperatorID, *rsa.PublicKey]
+	peerRateLimiter         *PeerRateLimitManager
 
 	// validationLocks is a map of lock per SSV message ID to
 	// prevent concurrent access to the same state.
@@ -95,6 +96,7 @@ func NewMessageValidator(netCfg networkconfig.NetworkConfig, opts ...Option) Mes
 		netCfg:                  netCfg,
 		operatorIDToPubkeyCache: hashmap.New[spectypes.OperatorID, *rsa.PublicKey](),
 		validationLocks:         make(map[spectypes.MessageID]*sync.Mutex),
+		peerRateLimiter:         NewPeerRateLimitManager(20, 300000, 1024, 1*time.Minute), // rate per second and duration
 	}
 
 	for _, opt := range opts {
@@ -229,6 +231,11 @@ func (mv *messageValidator) ValidatorForTopic(_ string) func(ctx context.Context
 // ValidatePubsubMessage validates the given pubsub message.
 // Depending on the outcome, it will return one of the pubsub validation results (Accept, Ignore, or Reject).
 func (mv *messageValidator) ValidatePubsubMessage(_ context.Context, peerID peer.ID, pmsg *pubsub.Message) pubsub.ValidationResult {
+	if !mv.peerRateLimiter.AllowRequest(peerID) {
+		mv.logger.Debug("Rejecting message due to rate limiting", fields.PeerID(peerID))
+		return pubsub.ValidationReject
+	}
+
 	if mv.selfAccept && peerID == mv.selfPID {
 		msg, _ := commons.DecodeNetworkMsg(pmsg.Data)
 		decMsg, _ := queue.DecodeSSVMessage(msg)
@@ -262,6 +269,11 @@ func (mv *messageValidator) ValidatePubsubMessage(_ context.Context, peerID peer
 				}
 
 				mv.metrics.MessageRejected(valErr.Text(), descriptor.Role, round)
+				if errors.Is(err, ErrRSASignature) {
+					mv.peerRateLimiter.RegisterRejectRequest(peerID)
+				} else {
+					mv.peerRateLimiter.RegisterIgnoreRequest(peerID)
+				}
 				return pubsub.ValidationReject
 			}
 
@@ -270,12 +282,14 @@ func (mv *messageValidator) ValidatePubsubMessage(_ context.Context, peerID peer
 				mv.logger.Debug("ignoring invalid message", f...)
 			}
 			mv.metrics.MessageIgnored(valErr.Text(), descriptor.Role, round)
+			mv.peerRateLimiter.RegisterIgnoreRequest(peerID)
 			return pubsub.ValidationIgnore
 		}
 
 		mv.metrics.MessageIgnored(err.Error(), descriptor.Role, round)
 		f = append(f, zap.Error(err))
 		mv.logger.Debug("ignoring invalid message", f...)
+		mv.peerRateLimiter.RegisterIgnoreRequest(peerID)
 		return pubsub.ValidationIgnore
 	}
 
