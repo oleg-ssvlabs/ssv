@@ -316,7 +316,7 @@ func (mv *messageValidator) validateP2PMessage(pMsg *pubsub.Message, receivedAt 
 			rsaRepetitions := 10
 			rsaCount := 1
 			for rsaCount < rsaRepetitions {
-				mv.verifyRSASignature(messageData, operatorID, signature)
+				_ = mv.verifyRSASignature(messageData, operatorID, signature)
 				rsaCount += 1
 			}
 			return mv.verifyRSASignature(messageData, operatorID, signature)
