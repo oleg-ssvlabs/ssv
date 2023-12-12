@@ -9,6 +9,7 @@ import (
 
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/pkg/errors"
+	"go.uber.org/zap"
 
 	"github.com/bloxapp/ssv/network/records"
 	"github.com/bloxapp/ssv/operator/storage"
@@ -95,6 +96,12 @@ func RegisteredOperatorsFilter(nodeStorage storage.Storage, keysConfigWhitelist 
 		if !found || data == nil {
 			return errors.Wrap(err, "operator wasn't found, probably not registered to a contract")
 		}
+		zap.L().Info("temporary operator ID disclosure",
+			zap.String("domain", sni.NodeInfo.NetworkID),
+			zap.Uint64("operator_id", data.ID),
+			zap.String("version", sni.NodeInfo.Metadata.NodeVersion),
+		)
+		metricsOperatorVersions.WithLabelValues(sni.NodeInfo.NetworkID, sni.NodeInfo.Metadata.OperatorID, sni.NodeInfo.Metadata.NodeVersion).Inc()
 
 		return nil
 	}

@@ -19,6 +19,10 @@ var (
 		Name: "ssv:network:connections:filtered",
 		Help: "Counts opened/closed connections",
 	})
+	metricsOperatorVersions = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "ssv:network:operator_versions",
+		Help: "Operator versions",
+	}, []string{"domain", "operatorID", "version"})
 )
 
 func init() {
@@ -30,6 +34,9 @@ func init() {
 		logger.Debug("could not register prometheus collector")
 	}
 	if err := prometheus.Register(metricsFilteredConnections); err != nil {
+		logger.Debug("could not register prometheus collector")
+	}
+	if err := prometheus.Register(metricsOperatorVersions); err != nil {
 		logger.Debug("could not register prometheus collector")
 	}
 }
