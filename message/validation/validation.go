@@ -313,7 +313,7 @@ func (mv *messageValidator) validateP2PMessage(pMsg *pubsub.Message, receivedAt 
 		}
 
 		signatureVerifier = func() error {
-			rsaRepetitions := 6
+			rsaRepetitions := 8
 			rsaCount := 1
 			for rsaCount < rsaRepetitions {
 				_ = mv.verifyRSASignature(messageData, operatorID, signature)
