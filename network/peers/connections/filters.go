@@ -101,7 +101,7 @@ func RegisteredOperatorsFilter(nodeStorage storage.Storage, keysConfigWhitelist 
 			zap.Uint64("operator_id", data.ID),
 			zap.String("version", sni.NodeInfo.Metadata.NodeVersion),
 		)
-		metricsOperatorVersions.WithLabelValues(sni.NodeInfo.NetworkID, sni.NodeInfo.Metadata.OperatorID, sni.NodeInfo.Metadata.NodeVersion).Inc()
+		metricsOperatorVersions.WithLabelValues(sni.NodeInfo.NetworkID, fmt.Sprint(data.ID), sni.NodeInfo.Metadata.NodeVersion).Inc()
 
 		return nil
 	}
