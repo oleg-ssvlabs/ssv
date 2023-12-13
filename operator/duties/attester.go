@@ -169,8 +169,6 @@ func (h *AttesterHandler) processExecution(epoch phase0.Epoch, slot phase0.Slot)
 	h.logger.Debug("starting processExecution", zap.Any("epoch", epoch), zap.Any("slot", slot))
 	duties := h.duties.CommitteeSlotDuties(epoch, slot)
 
-	h.logger.Debug("processExecution", zap.Any("duties", len(duties)))
-
 	if duties == nil {
 		return
 	}
@@ -183,7 +181,7 @@ func (h *AttesterHandler) processExecution(epoch phase0.Epoch, slot phase0.Slot)
 			toExecute = append(toExecute, h.toSpecDuty(d, spectypes.BNRoleAggregator))
 		}
 	}
-
+	h.logger.Debug("processExecution", zap.Any("duties", len(duties)), zap.Any("toExecute", len(toExecute)))
 	h.executeDuties(h.logger, toExecute)
 	h.logger.Debug("finish processExecution", zap.Any("epoch", epoch), zap.Any("slot", slot))
 }
