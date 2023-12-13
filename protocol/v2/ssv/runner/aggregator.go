@@ -2,6 +2,7 @@ package runner
 
 import (
 	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 
 	"github.com/attestantio/go-eth2-client/spec/phase0"
@@ -86,8 +87,13 @@ func (r *AggregatorRunner) ProcessPreConsensus(logger *zap.Logger, signedMsg *sp
 
 	duty := r.GetState().StartingDuty
 
+	signers := []spectypes.OperatorID{}
+	for id, _ := range r.GetState().PreConsensusContainer.Signatures[hex.EncodeToString(root[:])] {
+		signers = append(signers, id)
+	}
+
 	logger.Debug("🧩 got partial signature quorum",
-		zap.Any("signer", signedMsg.Signer),
+		zap.Any("signers", signers),
 		fields.Slot(duty.Slot),
 	)
 
