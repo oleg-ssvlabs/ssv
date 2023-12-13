@@ -148,13 +148,14 @@ func (v *Validator) ConsumeQueue(logger *zap.Logger, msgID spectypes.MessageID, 
 				zap.Ints("past_10_lengths", lens))
 			lens = lens[:0]
 		}
-
+		logger.Debug("queue start processing msg", fields.MessageID(msg.MsgID), fields.MessageType(msg.MsgType), zap.Any("heigh", state.Height))
 		// Handle the message.
 		if err := handler(logger, msg); err != nil {
 			v.logMsg(logger, msg, "❗ could not handle message",
 				fields.MessageType(msg.SSVMessage.MsgType),
 				zap.Error(err))
 		}
+		logger.Debug("queue finish processing msg", fields.MessageID(msg.MsgID), fields.MessageType(msg.MsgType), zap.Any("heigh", state.Height))
 	}
 
 	logger.Debug("📪 queue consumer is closed")

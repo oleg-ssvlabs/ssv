@@ -99,6 +99,7 @@ func (b *BaseRunner) baseStartNewDuty(logger *zap.Logger, runner Runner, duty *s
 	if err := b.ShouldProcessDuty(duty); err != nil {
 		return errors.Wrap(err, "can't start duty")
 	}
+	logger.Debug("starting baseStartNewDuty")
 	b.baseSetupForNewDuty(duty)
 	return runner.executeDuty(logger, duty)
 }

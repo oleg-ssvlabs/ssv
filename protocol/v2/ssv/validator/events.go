@@ -12,6 +12,7 @@ import (
 )
 
 func (v *Validator) handleEventMessage(logger *zap.Logger, msg *queue.DecodedSSVMessage, dutyRunner runner.Runner) error {
+	logger.Debug("started handleEventMessage")
 	eventMsg, ok := msg.Body.(*types.EventMsg)
 	if !ok {
 		return errors.New("could not decode event message")

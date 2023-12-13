@@ -246,6 +246,7 @@ func (r *AggregatorRunner) expectedPostConsensusRootsAndDomain() ([]ssz.HashRoot
 // 4) Once consensus decides, sign partial aggregation data and broadcast
 // 5) collect 2f+1 partial sigs, reconstruct and broadcast valid SignedAggregateSubmitRequest sig to the BN
 func (r *AggregatorRunner) executeDuty(logger *zap.Logger, duty *spectypes.Duty) error {
+	logger.Debug("start aggregator duty")
 	r.metrics.StartDutyFullFlow()
 	r.metrics.StartPreConsensus()
 
