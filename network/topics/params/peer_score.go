@@ -27,7 +27,7 @@ const (
 
 	// P6
 	ipColocationFactorThreshold = 10
-	ipColocationFactorWeight    = -topicScoreCap
+	ipColocationFactorWeight    = 0
 
 	// P7
 	behaviourPenaltyThreshold = 6
