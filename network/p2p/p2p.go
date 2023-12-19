@@ -8,6 +8,7 @@ import (
 
 	spectypes "github.com/bloxapp/ssv-spec/types"
 	"github.com/cornelk/hashmap"
+	"github.com/libp2p/go-libp2p/core/connmgr"
 	connmgrcore "github.com/libp2p/go-libp2p/core/connmgr"
 	"github.com/libp2p/go-libp2p/core/host"
 	"github.com/libp2p/go-libp2p/core/peer"
@@ -65,6 +66,7 @@ type p2pNetwork struct {
 	msgValidator validation.MessageValidator
 	connHandler  connections.ConnHandler
 	metrics      Metrics
+	connGater    connmgr.ConnectionGater
 
 	state int32
 
