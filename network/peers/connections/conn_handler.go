@@ -159,9 +159,9 @@ func (ch *connHandler) Handle(logger *zap.Logger) *libp2pnetwork.NotifyBundle {
 				logger := connLogger(conn)
 				err := acceptConnection(logger, net, conn)
 				if err == nil {
-					if ch.connIdx.Limit(conn.Stat().Direction) {
-						err = errors.New("reached peers limit")
-					}
+					// if ch.connIdx.Limit(conn.Stat().Direction) {
+					// 	err = errors.New("reached peers limit")
+					// }
 				}
 				if errors.Is(err, ignoredConnection) {
 					return
