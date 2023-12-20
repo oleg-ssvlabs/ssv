@@ -30,7 +30,7 @@ const (
 	meshDeliveryDecayEpochs     = time.Duration(16)
 	meshDeliveryDampeningFactor = 1.0 / 50.0
 	meshDeliveryCapFactor       = 16
-	meshScoringEnabled          = true
+	meshScoringEnabled          = false
 
 	// P4
 	invalidMessageDecayEpochs = time.Duration(100)
