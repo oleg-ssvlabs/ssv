@@ -230,66 +230,66 @@ func (mv *messageValidator) ValidatorForTopic(_ string) func(ctx context.Context
 // Depending on the outcome, it will return one of the pubsub validation results (Accept, Ignore, or Reject).
 func (mv *messageValidator) ValidatePubsubMessage(_ context.Context, peerID peer.ID, pmsg *pubsub.Message) pubsub.ValidationResult {
 
+	if mv.selfAccept && peerID == mv.selfPID {
+		msg, _ := commons.DecodeNetworkMsg(pmsg.Data)
+		decMsg, _ := queue.DecodeSSVMessage(msg)
+		pmsg.ValidatorData = decMsg
+		return pubsub.ValidationAccept
+	}
+
+	start := time.Now()
+	var validationDurationLabels []string // TODO: implement
+
+	defer func() {
+		sinceStart := time.Since(start)
+		mv.metrics.MessageValidationDuration(sinceStart, validationDurationLabels...)
+	}()
+
 	msg, _ := commons.DecodeNetworkMsg(pmsg.Data)
-	decMsg, _ := queue.DecodeSSVMessage(msg)
-	pmsg.ValidatorData = decMsg
-	return pubsub.ValidationAccept
-
-	// if mv.selfAccept && peerID == mv.selfPID {
-	// 	msg, _ := commons.DecodeNetworkMsg(pmsg.Data)
-	// 	decMsg, _ := queue.DecodeSSVMessage(msg)
-	// 	pmsg.ValidatorData = decMsg
-	// 	return pubsub.ValidationAccept
-	// }
-
-	// start := time.Now()
-	// var validationDurationLabels []string // TODO: implement
-
-	// defer func() {
-	// 	sinceStart := time.Since(start)
-	// 	mv.metrics.MessageValidationDuration(sinceStart, validationDurationLabels...)
-	// }()
+	decodedMessage, _ := queue.DecodeSSVMessage(msg)
+	var descriptor Descriptor
+	var err error
 
 	// decodedMessage, descriptor, err := mv.validateP2PMessage(pmsg, time.Now())
-	// round := specqbft.Round(0)
-	// if descriptor.Consensus != nil {
-	// 	round = descriptor.Consensus.Round
-	// }
+	round := specqbft.Round(0)
+	if descriptor.Consensus != nil {
+		round = descriptor.Consensus.Round
+	}
 
-	// f := append(descriptor.Fields(), fields.PeerID(peerID))
+	f := append(descriptor.Fields(), fields.PeerID(peerID))
 
-	// if err != nil {
-	// 	var valErr Error
-	// 	if errors.As(err, &valErr) {
-	// 		if valErr.Reject() {
-	// 			if !valErr.Silent() {
-	// 				f = append(f, zap.Error(err))
-	// 				mv.logger.Debug("rejecting invalid message", f...)
-	// 			}
+	if err != nil {
+		var valErr Error
+		if errors.As(err, &valErr) {
+			if valErr.Reject() {
+				if !valErr.Silent() {
+					f = append(f, zap.Error(err))
+					mv.logger.Debug("rejecting invalid message", f...)
+				}
 
-	// 			mv.metrics.MessageRejected(valErr.Text(), descriptor.Role, round)
-	// 			return pubsub.ValidationReject
-	// 		}
+				mv.metrics.MessageRejected(valErr.Text(), descriptor.Role, round)
+				return pubsub.ValidationReject
+			}
 
-	// 		if !valErr.Silent() {
-	// 			f = append(f, zap.Error(err))
-	// 			mv.logger.Debug("ignoring invalid message", f...)
-	// 		}
-	// 		mv.metrics.MessageIgnored(valErr.Text(), descriptor.Role, round)
-	// 		return pubsub.ValidationIgnore
-	// 	}
+			if !valErr.Silent() {
+				f = append(f, zap.Error(err))
+				mv.logger.Debug("ignoring invalid message", f...)
+			}
+			mv.metrics.MessageIgnored(valErr.Text(), descriptor.Role, round)
+			return pubsub.ValidationIgnore
+		}
 
-	// 	mv.metrics.MessageIgnored(err.Error(), descriptor.Role, round)
-	// 	f = append(f, zap.Error(err))
-	// 	mv.logger.Debug("ignoring invalid message", f...)
-	// 	return pubsub.ValidationIgnore
-	// }
+		mv.metrics.MessageIgnored(err.Error(), descriptor.Role, round)
+		f = append(f, zap.Error(err))
+		mv.logger.Debug("ignoring invalid message", f...)
+		return pubsub.ValidationIgnore
+	}
 
-	// pmsg.ValidatorData = decodedMessage
+	pmsg.ValidatorData = decodedMessage
 
-	// mv.metrics.MessageAccepted(descriptor.Role, round)
+	mv.metrics.MessageAccepted(descriptor.Role, round)
 
-	// return pubsub.ValidationAccept
+	return pubsub.ValidationAccept
 }
 
 // ValidateSSVMessage validates the given SSV message.
