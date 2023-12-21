@@ -306,77 +306,77 @@ func (mv *messageValidator) ValidateSSVMessage(ssvMessage *spectypes.SSVMessage)
 	return mv.validateSSVMessage(ssvMessage, time.Now(), nil)
 }
 
-func (mv *messageValidator) validateP2PMessage(pMsg *pubsub.Message, receivedAt time.Time) (*queue.DecodedSSVMessage, Descriptor, error) {
-	topic := pMsg.GetTopic()
+// func (mv *messageValidator) validateP2PMessage(pMsg *pubsub.Message, receivedAt time.Time) (*queue.DecodedSSVMessage, Descriptor, error) {
+// 	topic := pMsg.GetTopic()
 
-	mv.metrics.ActiveMsgValidation(topic)
-	defer mv.metrics.ActiveMsgValidationDone(topic)
+// 	mv.metrics.ActiveMsgValidation(topic)
+// 	defer mv.metrics.ActiveMsgValidationDone(topic)
 
-	messageData := pMsg.GetData()
+// 	messageData := pMsg.GetData()
 
-	var signatureVerifier func() error
+// 	var signatureVerifier func() error
 
-	currentEpoch := mv.netCfg.Beacon.EstimatedEpochAtSlot(mv.netCfg.Beacon.EstimatedSlotAtTime(receivedAt.Unix()))
-	if currentEpoch > mv.netCfg.PermissionlessActivationEpoch {
-		decMessageData, operatorID, signature, err := commons.DecodeSignedSSVMessage(messageData)
-		messageData = decMessageData
-		if err != nil {
-			e := ErrMalformedSignedMessage
-			e.innerErr = err
-			return nil, Descriptor{}, e
-		}
+// 	currentEpoch := mv.netCfg.Beacon.EstimatedEpochAtSlot(mv.netCfg.Beacon.EstimatedSlotAtTime(receivedAt.Unix()))
+// 	if currentEpoch > mv.netCfg.PermissionlessActivationEpoch {
+// 		decMessageData, operatorID, signature, err := commons.DecodeSignedSSVMessage(messageData)
+// 		messageData = decMessageData
+// 		if err != nil {
+// 			e := ErrMalformedSignedMessage
+// 			e.innerErr = err
+// 			return nil, Descriptor{}, e
+// 		}
 
-		signatureVerifier = func() error {
-			return mv.verifyRSASignature(messageData, operatorID, signature)
-		}
-	}
+// 		signatureVerifier = func() error {
+// 			return mv.verifyRSASignature(messageData, operatorID, signature)
+// 		}
+// 	}
 
-	if len(messageData) == 0 {
-		return nil, Descriptor{}, ErrPubSubMessageHasNoData
-	}
+// 	if len(messageData) == 0 {
+// 		return nil, Descriptor{}, ErrPubSubMessageHasNoData
+// 	}
 
-	mv.metrics.MessageSize(len(messageData))
+// 	mv.metrics.MessageSize(len(messageData))
 
-	// Max possible MsgType + MsgID + Data plus 10% for encoding overhead
-	const maxMsgSize = 4 + 56 + 8388668
-	const maxEncodedMsgSize = maxMsgSize + maxMsgSize/10
-	if len(messageData) > maxEncodedMsgSize {
-		e := ErrPubSubDataTooBig
-		e.got = len(messageData)
-		return nil, Descriptor{}, e
-	}
+// 	// Max possible MsgType + MsgID + Data plus 10% for encoding overhead
+// 	const maxMsgSize = 4 + 56 + 8388668
+// 	const maxEncodedMsgSize = maxMsgSize + maxMsgSize/10
+// 	if len(messageData) > maxEncodedMsgSize {
+// 		e := ErrPubSubDataTooBig
+// 		e.got = len(messageData)
+// 		return nil, Descriptor{}, e
+// 	}
 
-	msg, err := commons.DecodeNetworkMsg(messageData)
-	if err != nil {
-		e := ErrMalformedPubSubMessage
-		e.innerErr = err
-		return nil, Descriptor{}, e
-	}
+// 	msg, err := commons.DecodeNetworkMsg(messageData)
+// 	if err != nil {
+// 		e := ErrMalformedPubSubMessage
+// 		e.innerErr = err
+// 		return nil, Descriptor{}, e
+// 	}
 
-	if msg == nil {
-		return nil, Descriptor{}, ErrEmptyPubSubMessage
-	}
+// 	if msg == nil {
+// 		return nil, Descriptor{}, ErrEmptyPubSubMessage
+// 	}
 
-	// Check if the message was sent on the right topic.
-	currentTopic := pMsg.GetTopic()
-	currentTopicBaseName := commons.GetTopicBaseName(currentTopic)
-	topics := commons.ValidatorTopicID(msg.GetID().GetPubKey())
+// 	// Check if the message was sent on the right topic.
+// 	currentTopic := pMsg.GetTopic()
+// 	currentTopicBaseName := commons.GetTopicBaseName(currentTopic)
+// 	topics := commons.ValidatorTopicID(msg.GetID().GetPubKey())
 
-	topicFound := false
-	for _, tp := range topics {
-		if tp == currentTopicBaseName {
-			topicFound = true
-			break
-		}
-	}
-	if !topicFound {
-		return nil, Descriptor{}, ErrTopicNotFound
-	}
+// 	topicFound := false
+// 	for _, tp := range topics {
+// 		if tp == currentTopicBaseName {
+// 			topicFound = true
+// 			break
+// 		}
+// 	}
+// 	if !topicFound {
+// 		return nil, Descriptor{}, ErrTopicNotFound
+// 	}
 
-	mv.metrics.SSVMessageType(msg.MsgType)
+// 	mv.metrics.SSVMessageType(msg.MsgType)
 
-	return mv.validateSSVMessage(msg, receivedAt, signatureVerifier)
-}
+// 	return mv.validateSSVMessage(msg, receivedAt, signatureVerifier)
+// }
 
 func (mv *messageValidator) validateSSVMessage(ssvMessage *spectypes.SSVMessage, receivedAt time.Time, signatureVerifier func() error) (*queue.DecodedSSVMessage, Descriptor, error) {
 	var descriptor Descriptor

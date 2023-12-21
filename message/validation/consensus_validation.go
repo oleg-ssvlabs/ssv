@@ -350,18 +350,18 @@ func (mv *messageValidator) currentEstimatedRound(sinceSlotStart time.Duration) 
 	return estimatedRound
 }
 
-func (mv *messageValidator) waitAfterSlotStart(role spectypes.BeaconRole) time.Duration {
-	switch role {
-	case spectypes.BNRoleAttester, spectypes.BNRoleSyncCommittee:
-		return mv.netCfg.Beacon.SlotDurationSec() / 3
-	case spectypes.BNRoleAggregator, spectypes.BNRoleSyncCommitteeContribution:
-		return mv.netCfg.Beacon.SlotDurationSec() / 3 * 2
-	case spectypes.BNRoleProposer, spectypes.BNRoleValidatorRegistration, spectypes.BNRoleVoluntaryExit:
-		return 0
-	default:
-		panic("unknown role")
-	}
-}
+// func (mv *messageValidator) waitAfterSlotStart(role spectypes.BeaconRole) time.Duration {
+// 	switch role {
+// 	case spectypes.BNRoleAttester, spectypes.BNRoleSyncCommittee:
+// 		return mv.netCfg.Beacon.SlotDurationSec() / 3
+// 	case spectypes.BNRoleAggregator, spectypes.BNRoleSyncCommitteeContribution:
+// 		return mv.netCfg.Beacon.SlotDurationSec() / 3 * 2
+// 	case spectypes.BNRoleProposer, spectypes.BNRoleValidatorRegistration, spectypes.BNRoleVoluntaryExit:
+// 		return 0
+// 	default:
+// 		panic("unknown role")
+// 	}
+// }
 
 func (mv *messageValidator) validRole(roleType spectypes.BeaconRole) bool {
 	switch roleType {
