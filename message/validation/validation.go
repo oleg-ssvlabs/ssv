@@ -230,17 +230,42 @@ func (mv *messageValidator) ValidatorForTopic(_ string) func(ctx context.Context
 // Depending on the outcome, it will return one of the pubsub validation results (Accept, Ignore, or Reject).
 func (mv *messageValidator) ValidatePubsubMessage(_ context.Context, peerID peer.ID, pmsg *pubsub.Message) pubsub.ValidationResult {
 
-	msg, err := commons.DecodeNetworkMsg(pmsg.GetData())
+	messageData := pmsg.GetData()
+
+	decMessageData, _, _, err := commons.DecodeSignedSSVMessage(messageData)
 	if err != nil {
 		mv.logger.Debug("rejecting invalid message", zap.Error(err))
 		return pubsub.ValidationReject
 	}
-	decMsg, err := queue.DecodeSSVMessage(msg)
+
+	messageData = decMessageData
+
+	ssvMessage, err := commons.DecodeNetworkMsg(messageData)
 	if err != nil {
 		mv.logger.Debug("rejecting invalid message", zap.Error(err))
 		return pubsub.ValidationReject
 	}
-	pmsg.ValidatorData = decMsg
+
+	msg, err := queue.DecodeSSVMessage(ssvMessage)
+	if err != nil {
+		mv.logger.Debug("rejecting invalid message", zap.Error(err))
+		return pubsub.ValidationReject
+	}
+
+	pmsg.ValidatorData = msg
+
+	// msg, err := commons.DecodeNetworkMsg(pmsg.GetData())
+	// if err != nil {
+	// 	mv.logger.Debug("rejecting invalid message", zap.Error(err))
+	// 	return pubsub.ValidationReject
+	// }
+	// decMsg, err := queue.DecodeSSVMessage(msg)
+	// if err != nil {
+	// 	mv.logger.Debug("rejecting invalid message", zap.Error(err))
+	// 	return pubsub.ValidationReject
+	// }
+	// pmsg.ValidatorData = decMsg
+
 	return pubsub.ValidationAccept
 
 	// if mv.selfAccept && peerID == mv.selfPID {
