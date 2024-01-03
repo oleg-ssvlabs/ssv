@@ -230,6 +230,17 @@ func (mv *messageValidator) ValidatorForTopic(_ string) func(ctx context.Context
 // ValidatePubsubMessage validates the given pubsub message.
 // Depending on the outcome, it will return one of the pubsub validation results (Accept, Ignore, or Reject).
 func (mv *messageValidator) ValidatePubsubMessage(_ context.Context, peerID peer.ID, pmsg *pubsub.Message) pubsub.ValidationResult {
+	msg, err := commons.DecodeNetworkMsg(pmsg.Data)
+	if err != nil {
+		mv.logger.Error("unexpected error decoding network message", zap.Error(err))
+		return pubsub.ValidationReject
+	}
+	decMsg, err := queue.DecodeSSVMessage(msg)
+	if err != nil {
+		mv.logger.Error("unexpected error decoding SSV message", zap.Error(err))
+		return pubsub.ValidationReject
+	}
+	pmsg.ValidatorData = decMsg
 	return pubsub.ValidationAccept
 
 	if mv.selfAccept && peerID == mv.selfPID {
