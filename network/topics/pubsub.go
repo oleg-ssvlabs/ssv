@@ -143,18 +143,19 @@ func NewPubSub(ctx context.Context, logger *zap.Logger, cfg *PubSubConfig, metri
 	if cfg.ScoreIndex != nil || inspector != nil {
 		cfg.initScoring()
 
+		peerScoreParams := params.PeerScoreParams(cfg.Scoring.OneEpochDuration, cfg.MsgIDCacheTTL, cfg.Scoring.IPWhilelist...)
+
 		if inspector == nil {
 			peerConnected := func(pid peer.ID) bool {
 				return cfg.Host.Network().Connectedness(pid) == libp2pnetwork.Connected
 			}
-			inspector = scoreInspector(logger, cfg.ScoreIndex, scoreInspectLogFrequency, metrics, peerConnected)
+			inspector = scoreInspector(logger, cfg.ScoreIndex, scoreInspectLogFrequency, metrics, peerConnected, peerScoreParams)
 		}
 
 		if inspectInterval == 0 {
 			inspectInterval = defaultScoreInspectInterval
 		}
 
-		peerScoreParams := params.PeerScoreParams(cfg.Scoring.OneEpochDuration, cfg.MsgIDCacheTTL, cfg.Scoring.IPWhilelist...)
 		psOpts = append(psOpts, pubsub.WithPeerScore(peerScoreParams, params.PeerScoreThresholds()),
 			pubsub.WithPeerScoreInspect(inspector, inspectInterval))
 		if cfg.GetValidatorStats == nil {
@@ -163,7 +164,7 @@ func NewPubSub(ctx context.Context, logger *zap.Logger, cfg *PubSubConfig, metri
 				return 100, 100, 10, nil
 			}
 		}
-		topicScoreFactory = topicScoreParams(logger, cfg)
+		topicScoreFactory = topicScoreParams(logger, cfg, peerScoreParams.TopicScoreCap)
 	}
 
 	if cfg.MsgIDHandler != nil {
