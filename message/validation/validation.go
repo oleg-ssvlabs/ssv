@@ -232,24 +232,24 @@ func (mv *messageValidator) ValidatorForTopic(_ string) func(ctx context.Context
 func (mv *messageValidator) ValidatePubsubMessage(_ context.Context, peerID peer.ID, pmsg *pubsub.Message) pubsub.ValidationResult {
 	mv.metrics.MessagesReceivedFromPeer(pmsg.ReceivedFrom)
 
-	msgData := pmsg.Data
-	msgData, _, _, err := commons.DecodeSignedSSVMessage(pmsg.Data)
-	if err != nil {
-		mv.logger.Error("unexpected error decoding signed SSV message", zap.Error(err))
-		return pubsub.ValidationReject
-	}
-	msg, err := commons.DecodeNetworkMsg(msgData)
-	if err != nil {
-		mv.logger.Error("unexpected error decoding network message", zap.Error(err))
-		return pubsub.ValidationReject
-	}
-	decMsg, err := queue.DecodeSSVMessage(msg)
-	if err != nil {
-		mv.logger.Error("unexpected error decoding SSV message", zap.Error(err))
-		return pubsub.ValidationReject
-	}
-	pmsg.ValidatorData = decMsg
-	return pubsub.ValidationAccept
+	// msgData := pmsg.Data
+	// msgData, _, _, err := commons.DecodeSignedSSVMessage(pmsg.Data)
+	// if err != nil {
+	// 	mv.logger.Error("unexpected error decoding signed SSV message", zap.Error(err))
+	// 	return pubsub.ValidationReject
+	// }
+	// msg, err := commons.DecodeNetworkMsg(msgData)
+	// if err != nil {
+	// 	mv.logger.Error("unexpected error decoding network message", zap.Error(err))
+	// 	return pubsub.ValidationReject
+	// }
+	// decMsg, err := queue.DecodeSSVMessage(msg)
+	// if err != nil {
+	// 	mv.logger.Error("unexpected error decoding SSV message", zap.Error(err))
+	// 	return pubsub.ValidationReject
+	// }
+	// pmsg.ValidatorData = decMsg
+	// return pubsub.ValidationAccept
 
 	if mv.selfAccept && peerID == mv.selfPID {
 		msg, _ := commons.DecodeNetworkMsg(pmsg.Data)
