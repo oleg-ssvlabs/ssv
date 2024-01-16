@@ -8,7 +8,7 @@ import (
 	"go.uber.org/zap"
 )
 
-const validatorRegistrationEpochInterval = uint64(10)
+const validatorRegistrationEpochInterval = uint64(1)
 
 type ValidatorRegistrationHandler struct {
 	baseHandler
