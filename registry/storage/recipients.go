@@ -83,6 +83,7 @@ func (s *recipientsStorage) getRecipientData(r basedb.Reader, owner common.Addre
 		return nil, found, nil
 	}
 
+	s.logger.Debug("unmarshaling recipient data", zap.String("owner", owner.String()), zap.String("key", string(obj.Key)), zap.String("value", string(obj.Value)))
 	var recipientData RecipientData
 	err = json.Unmarshal(obj.Value, &recipientData)
 	return &recipientData, found, err
