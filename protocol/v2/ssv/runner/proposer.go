@@ -7,17 +7,16 @@ import (
 
 	"github.com/attestantio/go-eth2-client/api"
 	apiv1capella "github.com/attestantio/go-eth2-client/api/v1/capella"
+	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
-	specqbft "github.com/bloxapp/ssv-spec/qbft"
-	specssv "github.com/bloxapp/ssv-spec/ssv"
-	spectypes "github.com/bloxapp/ssv-spec/types"
 	ssz "github.com/ferranbt/fastssz"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
-	"github.com/attestantio/go-eth2-client/spec"
-
+	specqbft "github.com/bloxapp/ssv-spec/qbft"
+	specssv "github.com/bloxapp/ssv-spec/ssv"
+	spectypes "github.com/bloxapp/ssv-spec/types"
 	"github.com/bloxapp/ssv/beacon/goclient"
 	"github.com/bloxapp/ssv/logging/fields"
 	"github.com/bloxapp/ssv/protocol/v2/qbft/controller"
@@ -119,16 +118,19 @@ func (r *ProposerRunner) ProcessPreConsensus(logger *zap.Logger, signedMsg *spec
 				if err != nil {
 					return errors.Wrap(err, "failed falling back from blinded to standard beacon block")
 				}
+				logger.Debug("MEV performance: time to get standard block after falling back", zap.Duration("took", time.Since(start)))
 			} else {
 				return errors.Wrap(err, "failed to get blinded beacon block")
 			}
 		}
+		logger.Debug("MEV performance: time to get blinded block", zap.Duration("took", time.Since(start)))
 	} else {
 		// get block data
 		obj, ver, err = r.GetBeaconNode().GetBeaconBlock(duty.Slot, r.GetShare().Graffiti, fullSig)
 		if err != nil {
 			return errors.Wrap(err, "failed to get beacon block")
 		}
+		logger.Debug("MEV performance: time to get standard block", zap.Duration("took", time.Since(start)))
 	}
 
 	// Log essentials about the retrieved block.
