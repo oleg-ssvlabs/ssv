@@ -47,17 +47,17 @@ func (m *MockController) EXPECT() *MockControllerMockRecorder {
 }
 
 // AllActiveIndices mocks base method.
-func (m *MockController) AllActiveIndices(epoch phase0.Epoch) []phase0.ValidatorIndex {
+func (m *MockController) AllActiveIndices(epoch phase0.Epoch, afterInit bool) []phase0.ValidatorIndex {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AllActiveIndices", epoch)
+	ret := m.ctrl.Call(m, "AllActiveIndices", epoch, afterInit)
 	ret0, _ := ret[0].([]phase0.ValidatorIndex)
 	return ret0
 }
 
 // AllActiveIndices indicates an expected call of AllActiveIndices.
-func (mr *MockControllerMockRecorder) AllActiveIndices(epoch interface{}) *gomock.Call {
+func (mr *MockControllerMockRecorder) AllActiveIndices(epoch, afterInit interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AllActiveIndices", reflect.TypeOf((*MockController)(nil).AllActiveIndices), epoch)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AllActiveIndices", reflect.TypeOf((*MockController)(nil).AllActiveIndices), epoch, afterInit)
 }
 
 // CommitteeActiveIndices mocks base method.
@@ -112,6 +112,20 @@ func (m *MockController) GetOperatorData() *storage.OperatorData {
 func (mr *MockControllerMockRecorder) GetOperatorData() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOperatorData", reflect.TypeOf((*MockController)(nil).GetOperatorData))
+}
+
+// GetOperatorID mocks base method.
+func (m *MockController) GetOperatorID() types.OperatorID {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetOperatorID")
+	ret0, _ := ret[0].(types.OperatorID)
+	return ret0
+}
+
+// GetOperatorID indicates an expected call of GetOperatorID.
+func (mr *MockControllerMockRecorder) GetOperatorID() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOperatorID", reflect.TypeOf((*MockController)(nil).GetOperatorID))
 }
 
 // GetOperatorShares mocks base method.
