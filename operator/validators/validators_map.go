@@ -142,24 +142,34 @@ func (vm *ValidatorsMap) GetCommittee(pubKey spectypes.CommitteeID) (*validator.
 	return v, ok
 }
 
+// UpdateCommitteeAtomic allows to perform a mutation on a given committee in an atomic manner
+func (vm *ValidatorsMap) UpdateCommitteeAtomic(pubKey spectypes.CommitteeID, mutate func(*validator.Committee)) bool {
+	vm.mlock.Lock()
+	defer vm.mlock.Unlock()
+
+	vc, found := vm.committees[pubKey]
+	if !found {
+		return false
+	}
+
+	mutate(vc)
+
+	// in case the mutation was a share removal and the share was
+	// the last one for this committee - delete and stop commitee
+	if len(vc.Shares) == 0 {
+		delete(vm.committees, pubKey)
+		vc.Stop()
+	}
+
+	return true
+}
+
 // PutCommittee creates a new committee instance
 func (vm *ValidatorsMap) PutCommittee(pubKey spectypes.CommitteeID, v *validator.Committee) {
 	vm.mlock.Lock()
 	defer vm.mlock.Unlock()
 
 	vm.committees[pubKey] = v
-}
-
-// Remove removes a committee instance from the map
-func (vm *ValidatorsMap) RemoveCommittee(pubKey spectypes.CommitteeID) *validator.Committee {
-	if v, found := vm.GetCommittee(pubKey); found {
-		vm.mlock.Lock()
-		defer vm.mlock.Unlock()
-
-		delete(vm.committees, pubKey)
-		return v
-	}
-	return nil
 }
 
 // SizeCommittees returns the number of committees in the map
